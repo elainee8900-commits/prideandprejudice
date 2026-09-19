@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>코드네임: 팩트체커 - 중학생 문해력 & 정보문해력 5분 진단 퀘스트</title>
+  <style>
+    :root {
+      --bg-dark: #090d16;
+      --bg-card: rgba(18, 26, 44, 0.85);
+      --bg-card-hover: rgba(26, 38, 64, 0.9);
+      --neon-cyan: #00f2fe;
+      --neon-blue: #4facfe;
+      --neon-purple: #9d4edd;
+      --neon-green: #00e676;
+      --neon-pink: #ff2a6d;
+      --neon-amber: #ffb703;
+      --text-main: #f0f4f8;
+      --text-sub: #94a3b8;
+      --border-glow: rgba(0, 242, 254, 0.3);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --shadow-neon: 0 0 20px rgba(0, 242, 254, 0.25);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(79, 172, 254, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(157, 78, 221, 0.12) 0%, transparent 40%),
+        linear-gradient(180deg, #070a12 0%, #0d1322 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Scanline Effect */
+    body::before {
+      content: " ";
+      position: fixed;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 999;
+      pointer-events: none;
+      opacity: 0.3;
+    }
+
+    /* Top Navigation / HUD */
+    header.game-hud {
+      width: 100%;
+      max-width: 900px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(9, 13, 22, 0.7);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .hud-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.5px;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hud-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      font-weight: 700;
+      -webkit-text-fill-color: initial;
+    }
+
+    .hud-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .stat-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      padding: 6px 14px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-pill.timer {
+      border-color: rgba(255, 183, 3, 0.4);
+      color: var(--neon-amber);
+    }
+
+    .stat-pill.score {
+      border-color: rgba(0, 230, 118, 0.4);
+      color: var(--neon-green);
+    }
+
+    .btn-icon {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--neon-cyan);
+      transform: scale(1.05);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      width: 100%;
+      max-width: 900px;
+      padding: 10px 20px 0;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+      box-shadow: 0 0 10px var(--neon-cyan);
+      transition: width 0.4s ease;
+    }
+
+    /* Main Container */
+    main.app-viewport {
+      width: 100%;
+      max-width: 900px;
+      flex: 1;
+      padding: 24px 20px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Layout */
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .glass-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-purple), transparent);
+    }
+
+    .stage-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(157, 78, 221, 0.15);
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      color: #c77dff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .screen-title {
+      font-size: 1.6rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .screen-desc {
+      color: var(--text-sub);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    /* Buttons */
+    .btn-action {
+      background: linear-gradient(135deg, var(--neon-cyan), var(--neon-blue));
+      color: #031021;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 14px 28px;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(0, 242, 254, 0.7);
+    }
+
+    .btn-action:active {
+      transform: translateY(0);
+    }
+
+    .btn-action.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      box-shadow: none;
+    }
+
+    .btn-action.secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: var(--neon-cyan);
+    }
+
+    /* Intro Form */
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .input-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-field label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-sub);
+    }
+
+    .input-field input {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      font-size: 1rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .input-field input:focus {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+    }
+
+    .lore-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-left: 3px solid var(--neon-cyan);
+      padding: 16px 20px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    .lore-box strong {
+      color: var(--neon-cyan);
+    }
+
+    /* Interactive Elements - Stage 1 (Chips Select) */
+    .chips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .chip-item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      padding: 14px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .chip-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(0, 242, 254, 0.4);
+    }
+
+    .chip-item.selected {
+      background: rgba(0, 242, 254, 0.12);
+      border-color: var(--neon-cyan);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+    }
+
+    .chip-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 2px solid var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .chip-item.selected .chip-checkbox {
+      background: var(--neon-cyan);
+      border-color: var(--neon-cyan);
+      color: #031021;
+    }
+
+    /* Stage 2 - Swipe / Source Validation Cards */
+    .source-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .source-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .source-author {
+      font-size: 0.85rem;
+      color: var(--neon-cyan);
+      font-weight: 600;
+    }
+
+    .source-type {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-sub);
+    }
+
+    .source-content {
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+    }
+
+    .source-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .btn-trust {
+      background: rgba(0, 230, 118, 0.1);
+      border: 1px solid rgba(0, 230, 118, 0.4);
+      color: var(--neon-green);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-trust:hover {
+      background: rgba(0, 230, 118, 0.25);
+      border-color: var(--neon-green);
+    }
+
+    .btn-distrust {
+      background: rgba(255, 42, 109, 0.1);
+      border: 1px solid rgba(255, 42, 109, 0.4);
+      color: var(--neon-pink);
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-distrust:hover {
+      background: rgba(255, 42, 109, 0.25);
+      border-color: var(--neon-pink);
+    }
+
+    /* Stage 3 - Search Engine Simulator */
+    .search-mockup {
+      background: #0d121f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .search-bar-wrap {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .operator-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .tag-op {
+      background: rgba(157, 78, 221, 0.15);
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      color: #d8b4fe;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .tag-op:hover {
+      background: rgba(157, 78, 221, 0.3);
+    }
+
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .result-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      padding: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .result-item:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--neon-cyan);
+    }
+
+    .result-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--neon-blue);
+      margin-bottom: 4px;
+    }
+
+    .result-url {
+      font-size: 0.75rem;
+      color: var(--neon-green);
+      margin-bottom: 6px;
+    }
+
+    .result-snippet {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.4;
+    }
+
+    /* Stage 4 - Cross Examination & Spot the Fake */
+    .compare-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    @media (min-width: 768px) {
+      .compare-container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .doc-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+    }
+
+    .doc-header {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .clickable-sentence {
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+      display: inline;
+      line-height: 1.8;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .clickable-sentence:hover {
+      background: rgba(255, 183, 3, 0.2);
+    }
+
+    .clickable-sentence.flagged {
+      background: rgba(255, 42, 109, 0.35);
+      border-bottom: 2px solid var(--neon-pink);
+      color: #fff;
+    }
+
+    /* Stage 5 - Timeline Puzzle */
+    .timeline-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .slot-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px dashed var(--glass-border);
+      padding: 12px 16px;
+      border-radius: var(--radius-md);
+      min-height: 60px;
+    }
+
+    .slot-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      min-width: 80px;
+    }
+
+    .slot-dropzone {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .puzzle-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .puzzle-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--neon-cyan);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: all 0.2s ease;
+    }
+
+    .puzzle-chip:hover {
+      background: rgba(0, 242, 254, 0.2);
+      transform: scale(1.02);
+    }
+
+    .puzzle-chip.placed {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    /* Results Dashboard */
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    @media (min-width: 768px) {
+      .results-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .pisa-level-card {
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(0, 242, 254, 0.15));
+      border: 1px solid rgba(0, 242, 254, 0.5);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .level-badge-huge {
+      font-size: 2.8rem;
+      font-weight: 900;
+      background: linear-gradient(90deg, var(--neon-cyan), #fff, var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 10px 0;
+      letter-spacing: 1px;
+    }
+
+    .level-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--neon-amber);
+      margin-bottom: 8px;
+    }
+
+    .level-desc {
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .big6-breakdown {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .big6-bar-row {
+      margin-bottom: 12px;
+    }
+
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-sub);
+    }
+
+    .bar-bg {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-blue), var(--neon-green));
+      border-radius: 4px;
+      transition: width 0.8s ease-out;
+    }
+
+    .report-table-wrap {
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+    }
+
+    .report-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .report-table th, .report-table td {
+      padding: 12px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .report-table th {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--neon-cyan);
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 24px;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #111827;
+      border: 1px solid var(--border-glow);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      max-width: 540px;
+      width: 100%;
+      box-shadow: var(--shadow-neon);
+    }
+
+    .modal-box h3 {
+      font-size: 1.3rem;
+      margin-bottom: 14px;
+      color: var(--neon-cyan);
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+      body::before, header.game-hud, .action-row, .btn-action {
+        display: none !important;
+      }
+      .glass-card, .pisa-level-card, .big6-breakdown {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        color: #000 !important;
+      }
+      .level-badge-huge, .hud-title, .screen-title, .source-author, .slot-label {
+        color: #000 !important;
+        -webkit-text-fill-color: initial !important;
+      }
+      .bar-fill {
+        background: #333 !important;
+      }
+      .level-desc, .screen-desc, .bar-meta {
+        color: #444 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top HUD Header -->
+  <header class="game-hud">
+    <div class="hud-title">
+      <span>⚡ FACT-CHECKER IL</span>
+      <span class="hud-badge">PISA & BIG 6</span>
+    </div>
+    <div class="hud-stats">
+      <div class="stat-pill timer" id="timerPill">
+        <span>⏱️</span>
+        <span id="timerDisplay">05:00</span>
+      </div>
+      <div class="stat-pill score">
+        <span>⭐ EXP</span>
+        <span id="scoreDisplay">0</span>
+      </div>
+      <button class="btn-icon" id="soundToggle" title="음향 효과 토글">🔊</button>
+      <button class="btn-icon" id="dbSettingsBtn" title="데이터베이스(파이어베이스) 설정">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Mission Progress Bar -->
+  <div class="progress-container">
+    <div class="progress-track">
+      <div class="progress-bar" id="missionProgressBar"></div>
+    </div>
+  </div>
+
+  <!-- Main Viewport Screens -->
+  <main class="app-viewport">
+
+    <!-- Screen 0: Agent Registration & Briefing -->
+    <div class="screen active" id="screenIntro">
+      <div class="glass-card">
+        <div class="stage-badge">Agent Briefing Room</div>
+        <h1 class="screen-title">코드네임: 팩트체커 (Secret Fact-Checker)</h1>
+        <p class="screen-desc">5분 동안 비밀 요원이 되어 허위 정보와 왜곡된 기사를 파헤치고, 나의 진짜 <strong>문해력(PISA)</strong>과 <strong>정보 탐색력(Big 6 Skills)</strong>을 확인해 보세요!</p>
+
+        <div class="lore-box">
+          🚨 <strong>긴급 속보:</strong> 송도 스마트 시티에서 발생한 <em>'AI 자율주행 버스 7호차 정지 사건'</em>으로 도시 전체가 술렁이고 있습니다. 인터넷과 SNS에는 왜곡된 가짜 뉴스와 조작된 통계가 퍼지고 있습니다. 당신의 임무는 <strong>5분 안에</strong> 진짜 단서를 찾아 사건의 전말을 밝혀내는 것입니다!
+        </div>
+
+        <div class="intro-grid">
+          <div class="input-field">
+            <label for="studentSchool">학교 / 소속</label>
+            <input type="text" id="studentSchool" placeholder="예: 한국중학교" value="한국중학교">
+          </div>
+          <div class="input-field">
+            <label for="studentClass">학년 / 반 / 번호</label>
+            <input type="text" id="studentClass" placeholder="예: 2학년 3반 15번" value="2학년 1반">
+          </div>
+          <div class="input-field">
+            <label for="studentName">요원 닉네임 (이름)</label>
+            <input type="text" id="studentName" placeholder="당신의 이름을 입력하세요" value="탐정요원">
+          </div>
+        </div>
+
+        <button class="btn-action" id="startMissionBtn" style="width: 100%;">
+          <span>🚀 5분 팩트체크 미션 스타트!</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 1: Stage 1 - Task Definition & Locating Info -->
+    <div class="screen" id="screenStage1">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 01 : 과제 정의 & 정보 검색</div>
+        <h2 class="screen-title">사건 의뢰서 암호 해독</h2>
+        <p class="screen-desc">본부에서 전달된 사건 브리핑을 읽고, <strong>우리가 실제로 조사해야 할 핵심 목표 2가지</strong>를 골라 잠금 해제하세요.</p>
+
+        <div class="lore-box">
+          <strong>[본부 긴급 지령 #0919]</strong><br>
+          "자율주행 7호차가 교차로에서 멈춘 사건과 관련해 온라인에 괴담이 퍼지고 있다. 요원은 <strong>① 사고 당시 시스템에 기록된 객관적인 고장 원인 로그</strong>와 <strong>② 실제 인명 피해 유무 및 정확한 피해 규모</strong>를 객관적 데이터로 신속히 규명하라. 네티즌들의 주관적 반응이나 버스 요금 문제는 이번 조사 범위가 아니다."
+        </div>
+
+        <div class="chips-grid" id="stage1Chips">
+          <div class="chip-item" data-id="c1" data-correct="true">
+            <div class="chip-checkbox">✓</div>
+            <span>사고 당시 버스 시스템의 객관적 고장 원인 로그</span>
+          </div>
+          <div class="chip-item" data-id="c2" data-correct="false">
+            <div class="chip-checkbox">✓</div>
+            <span>SNS 네티즌들의 불안감 및 여론 반응 조사</span>
+          </div>
+          <div class="chip-item" data-id="c3" data-correct="true">
+            <div class="chip-checkbox">✓</div>
+            <span>사고로 인한 실제 인명 피해 유무 및 정확한 피해 규모</span>
+          </div>
+          <div class="chip-item" data-id="c4" data-correct="false">
+            <div class="chip-checkbox">✓</div>
+            <span>다음 달 자율주행 버스 요금 인상 계획</span>
+          </div>
+        </div>
+
+        <button class="btn-action" id="stage1SubmitBtn">
+          <span>암호 잠금 해제 및 다음 단계로</span> ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 2: Stage 2 - Information Seeking Strategies & Source Credibility -->
+    <div class="screen" id="screenStage2">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 02 : 정보 탐색 전략 & 출처 평가</div>
+        <h2 class="screen-title">정보원 신뢰도 감별 레이더</h2>
+        <p class="screen-desc">입수된 3개의 정보 조각을 검토하세요. <strong>공식적이고 신뢰할 수 있는 출처</strong>인지, <strong>주의/배제해야 할 출처</strong>인지 판단하세요. (<span id="stage2CardCount">1</span>/3)</p>
+
+        <div id="sourceCardWrap">
+          <!-- Dynamically Injected Source Card -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Stage 3 - Location & Access (Search Simulator) -->
+    <div class="screen" id="screenStage3">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 03 : 위치 파악 & 검색 접근</div>
+        <h2 class="screen-title">사이버 검색 시뮬레이터</h2>
+        <p class="screen-desc">수많은 인터넷 정보 속에서 <strong>"국가 공공기관의 공식 조사 보고서"</strong>만을 콕 집어내기 위한 가장 스마트한 검색식을 선택하세요.</p>
+
+        <div class="search-mockup">
+          <div class="search-bar-wrap">
+            <input type="text" class="search-input" id="simulatedSearchQuery" value="자율주행 버스 사고 원인" readonly>
+            <button class="btn-action" id="simSearchBtn" style="padding: 10px 20px;">검색</button>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">추천 검색 연산자 옵션을 골라 검색식을 업그레이드하세요:</div>
+          <div class="operator-tags" id="queryOptions">
+            <div class="tag-op" data-query='자율주행 버스 사고 원인 site:go.kr' data-score="100">✨ site:go.kr (정부/공공기관 공식 사이트 한정)</div>
+            <div class="tag-op" data-query='자율주행 버스 사고 대박 충격 이유' data-score="20">⚡ 자극적인 키워드 추가 (조회수 유도 블로그 유입)</div>
+            <div class="tag-op" data-query='"자율주행 7호차" AND "사고조사보고서"' data-score="90">🔍 따옴표 정확히 일치 및 AND 연산</div>
+            <div class="tag-op" data-query='자율주행 버스 사건 -광고' data-score="70">🛡️ 마이너스(-) 연산자로 광고 배제</div>
+          </div>
+
+          <div class="search-results-list" id="simResultsList" style="margin-top: 16px;">
+            <!-- Render search results -->
+          </div>
+        </div>
+
+        <button class="btn-action" id="stage3NextBtn" style="display: none;">
+          <span>결과 확보 완료! 팩트체크 단계로</span> ➔
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 4: Stage 4 - Use of Information & Fact Checking Spotter -->
+    <div class="screen" id="screenStage4">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 04 : 정보 활용 & 텍스트 교차 분석</div>
+        <h2 class="screen-title">돋보기 팩트체커: 왜곡 문장 적발</h2>
+        <p class="screen-desc">공식 보고서 원본과 인터넷 이슈 기사를 대조해 보세요. 인터넷 기사에서 <strong>공식 사실과 다르게 과장되거나 왜곡된 문장 2곳</strong>을 직접 터치하여 찾아내세요!</p>
+
+        <div class="compare-container">
+          <div class="doc-box">
+            <div class="doc-header">
+              <span>📋 국토교통안전청 1차 공식 조사서</span>
+              <span style="color: var(--neon-green);">VERIFIED</span>
+            </div>
+            <p style="font-size: 0.88rem; line-height: 1.7; color: #cbd5e1;">
+              "2026년 9월 18일 14:15경 송도 센트럴 사거리에서 자율주행 7호차가 <strong>센서에 튄 진흙 이물질</strong>로 인해 주변 사물 식별률이 35%로 일시 저하됨. 이에 차량은 매뉴얼에 명시된 <strong>안전 정지 프로토콜에 따라 비상등을 켜고 서행 후 안전하게 갓길에 정차</strong>함. 탑승 승객 8명 중 <strong>부상자는 전혀 없었으며(0명)</strong>, 5분 뒤 현장 안전요원에 의해 수동 운전으로 정상 회차함."
+            </p>
+          </div>
+
+          <div class="doc-box">
+            <div class="doc-header">
+              <span>📰 사이버이슈 투데이 (인터넷 블로그형 기사)</span>
+              <span style="color: var(--neon-pink);">UNVERIFIED</span>
+            </div>
+            <p style="font-size: 0.88rem; line-height: 1.8; color: #e2e8f0;">
+              <span class="clickable-sentence" data-error="true" data-id="err1">어제 오후 송도에서 달리던 자율주행 7호차 시스템 전체가 해킹당해 먹통이 되는 아찔한 참사가 벌어졌습니다.</span> 
+              <span class="clickable-sentence" data-error="false">사건 직후 교통 통제가 이루어졌습니다.</span> 
+              <span class="clickable-sentence" data-error="true" data-id="err2">현장 관계자에 따르면 충돌 충격으로 승객 10여 명이 큰 부상을 입고 응급실로 실려갔다고 합니다.</span> 
+              <span class="clickable-sentence" data-error="false">현재 경찰과 관계 부처가 조사에 착수한 상태입니다.</span>
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 0.9rem; color: var(--neon-amber);">
+            적발된 왜곡 문장: <span id="flaggedCount">0</span> / 2개
+          </div>
+          <button class="btn-action" id="stage4NextBtn" disabled style="opacity: 0.5;">
+            <span>팩트 검증 완료</span> ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Stage 5 - Synthesis (Timeline Puzzle) -->
+    <div class="screen" id="screenStage5">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 05 : 정보 통합 & 종합 추론</div>
+        <h2 class="screen-title">사건의 전말: 타임라인 브리핑 조립</h2>
+        <p class="screen-desc">수집된 4가지 핵심 팩트 조각을 올바른 <strong>논리적 흐름(원인 ➔ 시스템 조치 ➔ 실제 결과 ➔ 향후 대책)</strong> 순서대로 클릭하여 최종 사건 브리핑을 완성하세요.</p>
+
+        <div class="puzzle-chips" id="puzzleChipsPool">
+          <!-- Chips injected by JS -->
+        </div>
+
+        <div class="timeline-slots">
+          <div class="slot-row">
+            <span class="slot-label">STEP 1. 발단/원인</span>
+            <div class="slot-dropzone" id="slot1" data-step="1"></div>
+          </div>
+          <div class="slot-row">
+            <span class="slot-label">STEP 2. 시스템 조치</span>
+            <div class="slot-dropzone" id="slot2" data-step="2"></div>
+          </div>
+          <div class="slot-row">
+            <span class="slot-label">STEP 3. 실제 결과</span>
+            <div class="slot-dropzone" id="slot3" data-step="3"></div>
+          </div>
+          <div class="slot-row">
+            <span class="slot-label">STEP 4. 향후 대책</span>
+            <div class="slot-dropzone" id="slot4" data-step="4"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-action secondary" id="resetTimelineBtn">다시 조립</button>
+          <button class="btn-action" id="stage5NextBtn" disabled style="opacity: 0.5; flex: 1;">
+            <span>보고서 완성 및 최종 검토</span> ➔
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 6: Stage 6 - Metacognitive Evaluation -->
+    <div class="screen" id="screenStage6">
+      <div class="glass-card">
+        <div class="stage-badge">MISSION 06 : 평가 & 메타인지 성찰</div>
+        <h2 class="screen-title">요원 디브리핑: 자기 평가</h2>
+        <p class="screen-desc">최고의 정보 분석가는 자신이 내린 판단 과정을 냉철하게 되돌아봅니다. 마지막 성찰 문항에 답해주세요.</p>
+
+        <div class="lore-box">
+          <strong>[상황 질문]</strong><br>
+          조사가 끝난 직후, 익명의 시민 제보 영상이 도착했습니다. "7호차 센서 외에도 당시 일시적인 통신 기지국 점검이 있었다"는 내용입니다. 훌륭한 정보 요원이라면 어떻게 행동해야 할까요?
+        </div>
+
+        <div class="chips-grid" id="stage6Options" style="grid-template-columns: 1fr;">
+          <div class="chip-item" data-score="100">
+            <div class="chip-checkbox">✓</div>
+            <span>제보 영상의 촬영 시점과 출처의 신뢰성을 재검증하고, 필요시 보고서에 보완 내용을 추가한다.</span>
+          </div>
+          <div class="chip-item" data-score="20">
+            <div class="chip-checkbox">✓</div>
+            <span>이미 작성을 끝낸 보고서의 결론이 흔들릴 수 있으므로 추가 제보는 무시한다.</span>
+          </div>
+          <div class="chip-item" data-score="40">
+            <div class="chip-checkbox">✓</div>
+            <span>제보 영상이 흥미로우니 검증 없이 곧바로 인터넷 커뮤니티에 올려 반응을 본다.</span>
+          </div>
+        </div>
+
+        <button class="btn-action" id="finishMissionBtn" style="width: 100%; margin-top: 20px;">
+          <span>🏆 미션 종료 및 PISA 종합 진단 리포트 열람</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Screen 7: Final Comprehensive Diagnostic Report -->
+    <div class="screen" id="screenReport">
+      <div class="glass-card" style="padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 14px; margin-bottom: 20px;">
+          <div>
+            <span class="stage-badge" style="background: rgba(0, 230, 118, 0.15); border-color: var(--neon-green); color: var(--neon-green);">MISSION ACCOMPLISHED</span>
+            <h2 class="screen-title" style="margin: 4px 0 0;">정보 문해력 종합 진단 결과서</h2>
+          </div>
+          <div style="text-align: right; font-size: 0.85rem; color: var(--text-sub);">
+            <div id="reportStudentInfo" style="font-weight: 700; color: #fff;">한국중학교 2-1 탐정요원</div>
+            <div id="reportTimestamp">2026.09.19</div>
+          </div>
+        </div>
+
+        <!-- Result Overview Grid -->
+        <div class="results-grid">
+          <!-- PISA Reading Level Card -->
+          <div class="pisa-level-card">
+            <div style="font-size: 0.85rem; letter-spacing: 1px; color: var(--neon-cyan); font-weight: 700;">OECD PISA 문해력 성취수준</div>
+            <div class="level-badge-huge" id="pisaLevelDisplay">Level 5</div>
+            <div class="level-title" id="pisaTitleDisplay">탁월한 디지털 비판 문해력</div>
+            <p class="level-desc" id="pisaDescDisplay">
+              복합 디지털 텍스트의 맥락을 꿰뚫어 보고, 정보원의 신뢰성과 잠재적 왜곡을 비판적으로 평가하며, 다중 정보를 종합해 논리적 결론을 도출하는 최상위 역량입니다.
+            </p>
+            <div style="margin-top: 14px; font-size: 0.8rem; color: var(--neon-green); font-weight: 600;">
+              종합 획득 점수: <span id="finalScoreVal">95</span> / 100점 (소요시간: <span id="finalTimeVal">3분 42초</span>)
+            </div>
+          </div>
+
+          <!-- Big 6 Skills Radar Breakdown -->
+          <div class="big6-breakdown">
+            <div style="font-size: 0.95rem; font-weight: 700; margin-bottom: 14px; color: #fff; display: flex; justify-content: space-between;">
+              <span>📊 Big 6 Skills 정보 문해력 프로파일</span>
+              <span style="color: var(--neon-cyan); font-size: 0.8rem;">100점 만점 기준</span>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>1. 과제 정의 (Task Definition)</span>
+                <span id="scoreBig6_1">95%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_1" style="width: 95%;"></div></div>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>2. 정보 탐색 전략 (Seeking Strategies)</span>
+                <span id="scoreBig6_2">90%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_2" style="width: 90%;"></div></div>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>3. 위치 파악 및 접근 (Location & Access)</span>
+                <span id="scoreBig6_3">92%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_3" style="width: 92%;"></div></div>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>4. 정보 활용 및 분석 (Use of Information)</span>
+                <span id="scoreBig6_4">88%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_4" style="width: 88%;"></div></div>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>5. 정보 종합 및 구성 (Synthesis)</span>
+                <span id="scoreBig6_5">94%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_5" style="width: 94%;"></div></div>
+            </div>
+
+            <div class="big6-bar-row">
+              <div class="bar-meta">
+                <span>6. 평가 및 메타인지 (Evaluation)</span>
+                <span id="scoreBig6_6">90%</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill" id="fillBig6_6" style="width: 90%;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PISA Cognitive Domains Matrix -->
+        <div class="report-table-wrap">
+          <table class="report-table">
+            <thead>
+              <tr>
+                <th>PISA 읽기 인지 프로세스</th>
+                <th>측정 역량 내용</th>
+                <th>성취도</th>
+                <th>중학생 맞춤 피드백</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>정보 접근 및 검색</strong><br>(Locating Information)</td>
+                <td>단서 스캔, 검색식 설계, 핵심 목표 파악</td>
+                <td id="pisaProc1Score" style="font-weight: 700; color: var(--neon-cyan);">93점</td>
+                <td id="pisaProc1Feedback">정부 공식 사이트 필터와 검색 연산자를 효과적으로 사용하여 고품질 정보를 빠르게 찾아냈습니다.</td>
+              </tr>
+              <tr>
+                <td><strong>텍스트 이해 및 통합</strong><br>(Understanding)</td>
+                <td>핵심 의미 파악, 인과관계 연결, 종합 추론</td>
+                <td id="pisaProc2Score" style="font-weight: 700; color: var(--neon-green);">94점</td>
+                <td id="pisaProc2Feedback">사건의 단편적 조각들을 시간과 인과관계 순서로 완벽하게 꿰맞추는 우수한 문해력을 보여주었습니다.</td>
+              </tr>
+              <tr>
+                <td><strong>평가 및 성찰</strong><br>(Evaluating & Reflecting)</td>
+                <td>신뢰도 감별, 가짜 뉴스 적발, 메타인지</td>
+                <td id="pisaProc3Score" style="font-weight: 700; color: var(--neon-pink);">89점</td>
+                <td id="pisaProc3Feedback">선정적 낚시성 기사와 통계 왜곡 문장을 예리하게 잡아내며 훌륭한 팩트체커 소양을 입증했습니다.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-row">
+          <button class="btn-action" onclick="window.print()">
+            <span>🖨️ 진단 결과 인쇄 / PDF 저장</span>
+          </button>
+          <button class="btn-action secondary" id="exportCsvBtn">
+            <span>📥 결과 CSV 다운로드</span>
+          </button>
+          <button class="btn-action secondary" id="restartGameBtn">
+            <span>🔄 다시 도전하기</span>
+          </button>
+        </div>
+
+        <!-- Cloud Sync Status Bar -->
+        <div style="margin-top: 18px; text-align: center; font-size: 0.8rem; color: var(--text-sub);">
+          <span id="cloudSyncStatus">💾 로컬 저장소(LocalStorage)에 안전하게 저장되었습니다.</span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Database / Firebase Settings Modal -->
+  <div class="modal-overlay" id="dbSettingsModal">
+    <div class="modal-box">
+      <h3>🔥 데이터베이스 연동 설정 (Firebase)</h3>
+      <p style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.5; margin-bottom: 16px;">
+        인터넷이 연결되어 있을 때 학생들의 진단 결과를 파이어베이스(Firestore) 클라우드에 자동으로 수집할 수 있습니다. 설정하지 않아도 오프라인 로컬 저장소에 자동 보관됩니다.
+      </p>
+
+      <div class="input-field" style="margin-bottom: 12px;">
+        <label>Firestore 컬렉션 이름</label>
+        <input type="text" id="fbCollectionName" value="il_literacy_results">
+      </div>
+
+      <div class="input-field" style="margin-bottom: 16px;">
+        <label>Firebase Config (JSON 형식)</label>
+        <textarea id="fbConfigJson" rows="6" style="background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); color: #fff; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; width: 100%; outline: none;" placeholder='{ "apiKey": "...", "authDomain": "...", "projectId": "..." }'></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn-action secondary" id="closeDbModalBtn">닫기</button>
+        <button class="btn-action" id="saveDbModalBtn">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 998;"></canvas>
+
+  <script>
+    /* =========================================================
+       1. WEB AUDIO API SYNTHESIZER (100% Offline Sound Generator)
+       ========================================================= */
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playClick() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      }
+      playSuccess() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.08);
+          gain.gain.setValueAtTime(0.15, now + i * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + i * 0.08);
+          osc.stop(now + i * 0.08 + 0.2);
+        });
+      }
+      playError() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.setValueAtTime(120, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      }
+      playFanfare() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+        notes.forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, this.ctx.currentTime + i * 0.1);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime + i * 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + i * 0.1 + 0.4);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + i * 0.1);
+          osc.stop(this.ctx.currentTime + i * 0.1 + 0.4);
+        });
+      }
+    }
+    const sfx = new SoundFX();
+
+    /* =========================================================
+       2. GAME STATE & SCORING DATA MODEL
+       ========================================================= */
+    const gameState = {
+      student: { school: '', class: '', name: '' },
+      timerTotalSeconds: 300, // 5 minutes
+      timeRemaining: 300,
+      timerInterval: null,
+      score: 0,
+      currentScreen: 'screenIntro',
+      
+      // Detailed metric points
+      big6: {
+        taskDefinition: 0,       // Stage 1
+        seekingStrategies: 0,    // Stage 2
+        locationAccess: 0,       // Stage 3
+        useInformation: 0,       // Stage 4
+        synthesis: 0,            // Stage 5
+        evaluation: 0            // Stage 6
+      },
+      pisa: {
+        locating: 0,     // Stages 1, 3
+        understanding: 0,// Stages 4, 5
+        reflecting: 0    // Stages 2, 4, 6
+      },
+      answers: {}
+    };
+
+    /* =========================================================
+       3. STAGE DATA & LOGIC
+       ========================================================= */
+
+    // Stage 2 Sources Data
+    const stage2Sources = [
+      {
+        id: 's1',
+        author: '국토교통안전청 대변인실',
+        type: '공공기관 공식 보도자료',
+        content: '"자율주행 7호차의 일시적 정차 건에 대해 정밀 조사반을 급파하였으며, 1차 센서 로그 확인 결과 외부 오염으로 인한 안전 프로토콜 작동으로 확인되었습니다."',
+        shouldTrust: true,
+        feedback: '국가 공공기관의 공식 조사 발표는 높은 신뢰도를 갖습니다.'
+      },
+      {
+        id: 's2',
+        author: '초특급이슈유튜브채널',
+        type: '개인 SNS / 쇼츠 영상',
+        content: '"[긴급속보] 자율주행 버스 폭발 직전 탈출?! 탑승자 전원 충격 증언! (댓글 링크 클릭 시 최신 스마트폰 무료 증정 이벤트)"',
+        shouldTrust: false,
+        feedback: '과장된 클릭베이트 제목과 상업적 광고 링크는 신뢰할 수 없는 정보원입니다.'
+      },
+      {
+        id: 's3',
+        author: '한국인공지능모빌리티연구원',
+        type: '전문 학술기관 기술 보고서',
+        content: '"비가 내린 직후 노면 흙탕물이 라이더 센서 표면에 흡착될 경우 반사 신호 왜곡 확률이 12.4% 증가하며, 이는 시스템 오류가 아닌 보호 모드 가동 사유에 해당합니다."',
+        shouldTrust: true,
+        feedback: '전문 연구기관의 기술적/실증적 데이터 분석은 객관적 근거로 활용하기에 적합합니다.'
+      }
+    ];
+    let stage2Index = 0;
+
+    // Stage 5 Timeline Puzzle Items
+    const stage5Items = [
+      { id: 'p1', step: 1, text: '🌧️ 비 온 뒤 노면의 흙탕물이 차량 라이더 센서에 튀어 시야 차단' },
+      { id: 'p2', step: 2, text: '🛡️ 센서 식별률 저하 감지 즉시 안전 정지 프로토콜 가동 (서행 갓길 정차)' },
+      { id: 'p3', step: 3, text: '👨‍✈️ 승객 8명 무사(부상 0명), 안전요원 탑승 후 수동으로 정상 운행 복귀' },
+      { id: 'p4', step: 4, text: '🔧 향후 대책: 동절기 및 우천 대비 센서 자동 세척·열선 와이퍼 도입' }
+    ];
+
+    /* =========================================================
+       4. NAVIGATION & TIMER
+       ========================================================= */
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      const target = document.getElementById(screenId);
+      if (target) target.classList.add('active');
+      gameState.currentScreen = screenId;
+
+      // Update progress bar
+      const screenList = ['screenIntro', 'screenStage1', 'screenStage2', 'screenStage3', 'screenStage4', 'screenStage5', 'screenStage6', 'screenReport'];
+      const curIdx = screenList.indexOf(screenId);
+      const progressPct = curIdx <= 0 ? 0 : Math.round((curIdx / (screenList.length - 1)) * 100);
+      document.getElementById('missionProgressBar').style.width = progressPct + '%';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function startTimer() {
+      if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+      gameState.timerInterval = setInterval(() => {
+        gameState.timeRemaining--;
+        if (gameState.timeRemaining <= 0) {
+          clearInterval(gameState.timerInterval);
+          gameState.timeRemaining = 0;
+          alert("⏱️ 5분 미션 시간이 종료되었습니다! 현재까지 수집된 데이터를 바탕으로 최종 분석을 진행합니다.");
+          finishMissionAndShowReport();
+        }
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const min = Math.floor(gameState.timeRemaining / 60);
+      const sec = gameState.timeRemaining % 60;
+      const display = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+      const el = document.getElementById('timerDisplay');
+      if (el) el.textContent = display;
+
+      if (gameState.timeRemaining < 60) {
+        document.getElementById('timerPill').style.borderColor = 'var(--neon-pink)';
+        document.getElementById('timerPill').style.color = 'var(--neon-pink)';
+      }
+    }
+
+    function addScore(points) {
+      gameState.score += points;
+      const scoreEl = document.getElementById('scoreDisplay');
+      if (scoreEl) scoreEl.textContent = gameState.score;
+    }
+
+    /* =========================================================
+       5. STAGE EVENT HANDLERS
+       ========================================================= */
+
+    // Stage 1: Chips selection
+    document.querySelectorAll('#stage1Chips .chip-item').forEach(chip => {
+      chip.addEventListener('click', () => {
+        sfx.playClick();
+        chip.classList.toggle('selected');
+      });
+    });
+
+    document.getElementById('stage1SubmitBtn').addEventListener('click', () => {
+      const selected = Array.from(document.querySelectorAll('#stage1Chips .chip-item.selected'));
+      if (selected.length === 0) {
+        alert("최소 1개 이상의 핵심 조사 목표를 선택해 주세요!");
+        return;
+      }
+      let correctCount = 0;
+      selected.forEach(c => {
+        if (c.dataset.correct === 'true') correctCount++;
+        else correctCount--;
+      });
+
+      let stageScore = Math.max(0, correctCount * 50); // max 100
+      gameState.big6.taskDefinition = stageScore;
+      gameState.pisa.locating += stageScore * 0.5;
+      addScore(stageScore);
+
+      if (stageScore >= 80) sfx.playSuccess();
+      else sfx.playClick();
+
+      initStage2();
+      switchScreen('screenStage2');
+    });
+
+    // Stage 2: Source Credibility
+    function initStage2() {
+      stage2Index = 0;
+      renderStage2Card();
+    }
+
+    function renderStage2Card() {
+      const wrap = document.getElementById('sourceCardWrap');
+      document.getElementById('stage2CardCount').textContent = stage2Index + 1;
+      const src = stage2Sources[stage2Index];
+
+      wrap.innerHTML = `
+        <div class="source-card">
+          <div class="source-header">
+            <span class="source-author">출처: ${src.author}</span>
+            <span class="source-type">${src.type}</span>
+          </div>
+          <div class="source-content">${src.content}</div>
+          <div class="source-actions">
+            <button class="btn-trust" onclick="handleStage2Answer(true)">
+              ✅ 신뢰할 수 있는 공식 정보
+            </button>
+            <button class="btn-distrust" onclick="handleStage2Answer(false)">
+              ⚠️ 편향/주의/배제 대상 정보
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    window.handleStage2Answer = function(trusted) {
+      const src = stage2Sources[stage2Index];
+      const isCorrect = (trusted === src.shouldTrust);
+      if (isCorrect) {
+        sfx.playSuccess();
+        gameState.big6.seekingStrategies += 33.3;
+        gameState.pisa.reflecting += 33.3;
+        addScore(35);
+      } else {
+        sfx.playError();
+      }
+
+      stage2Index++;
+      if (stage2Index < stage2Sources.length) {
+        renderStage2Card();
+      } else {
+        gameState.big6.seekingStrategies = Math.round(gameState.big6.seekingStrategies);
+        gameState.pisa.reflecting = Math.round(gameState.pisa.reflecting);
+        switchScreen('screenStage3');
+      }
+    };
+
+    // Stage 3: Search Simulator
+    document.querySelectorAll('#queryOptions .tag-op').forEach(tag => {
+      tag.addEventListener('click', () => {
+        sfx.playClick();
+        const q = tag.getAttribute('data-query');
+        const score = parseInt(tag.getAttribute('data-score'));
+        document.getElementById('simulatedSearchQuery').value = q;
+        renderSearchResults(q, score);
+      });
+    });
+
+    function renderSearchResults(query, qualityScore) {
+      const resList = document.getElementById('simResultsList');
+      if (qualityScore >= 90) {
+        resList.innerHTML = `
+          <div class="result-item" onclick="selectFinalSearchResult(100)">
+            <div class="result-title">[공식] 국토교통안전청 - 자율주행 7호차 사고조사 1차 정밀분석 결과 보고서</div>
+            <div class="result-url">https://www.ts2020.kr/safety/report/view?id=9021</div>
+            <div class="result-snippet">자율주행 버스 7호차의 센서 일시 식별 저하 및 안전 프로토콜 작동에 따른 무사고 정차 조사 결과 및 데이터 원문...</div>
+          </div>
+        `;
+      } else if (qualityScore >= 70) {
+        resList.innerHTML = `
+          <div class="result-item" onclick="selectFinalSearchResult(75)">
+            <div class="result-title">자율주행 버스 사건 공식 보도자료 요약 (광고 필터링됨)</div>
+            <div class="result-url">https://news.carrier.co.kr/article/11094</div>
+            <div class="result-snippet">광고를 제외한 언론 보도 내용. 공공기관 조사관의 발언을 인용하여 사건 원인을 조명...</div>
+          </div>
+        `;
+      } else {
+        resList.innerHTML = `
+          <div class="result-item" onclick="selectFinalSearchResult(30)">
+            <div class="result-title">대박 충격 실화!! 자율주행 버스 타고 가다 지옥을 맛봤습니다 (클릭 시 사은품 증정)</div>
+            <div class="result-url">https://clickbait-blog.net/daily/5549</div>
+            <div class="result-snippet">확인되지 않은 네티즌 루머와 낚시성 제목이 난무하는 블로그 글입니다...</div>
+          </div>
+        `;
+      }
+    }
+
+    window.selectFinalSearchResult = function(score) {
+      sfx.playSuccess();
+      gameState.big6.locationAccess = score;
+      gameState.pisa.locating = Math.round((gameState.pisa.locating + score) / 2);
+      addScore(score);
+      const nextBtn = document.getElementById('stage3NextBtn');
+      nextBtn.style.display = 'inline-flex';
+      nextBtn.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    document.getElementById('stage3NextBtn').addEventListener('click', () => {
+      switchScreen('screenStage4');
+    });
+
+    // Stage 4: Cross Examination Clickable Sentences
+    let flaggedErrors = new Set();
+    document.querySelectorAll('.clickable-sentence').forEach(span => {
+      span.addEventListener('click', () => {
+        sfx.playClick();
+        span.classList.toggle('flagged');
+        const id = span.dataset.id;
+        const isError = span.dataset.error === 'true';
+
+        if (span.classList.contains('flagged')) {
+          if (isError) {
+            flaggedErrors.add(id);
+            sfx.playSuccess();
+          }
+        } else {
+          flaggedErrors.delete(id);
+        }
+
+        document.getElementById('flaggedCount').textContent = flaggedErrors.size;
+        const nextBtn = document.getElementById('stage4NextBtn');
+        if (flaggedErrors.size >= 2) {
+          nextBtn.disabled = false;
+          nextBtn.style.opacity = '1';
+        }
+      });
+    });
+
+    document.getElementById('stage4NextBtn').addEventListener('click', () => {
+      let stageScore = flaggedErrors.size === 2 ? 100 : (flaggedErrors.size === 1 ? 60 : 20);
+      gameState.big6.useInformation = stageScore;
+      gameState.pisa.understanding += stageScore * 0.5;
+      gameState.pisa.reflecting = Math.round((gameState.pisa.reflecting + stageScore) / 2);
+      addScore(stageScore);
+      initStage5();
+      switchScreen('screenStage5');
+    });
+
+    // Stage 5: Timeline Puzzle
+    let timelinePlaced = {};
+    function initStage5() {
+      const pool = document.getElementById('puzzleChipsPool');
+      pool.innerHTML = '';
+      // Shuffle items
+      const shuffled = [...stage5Items].sort(() => Math.random() - 0.5);
+      shuffled.forEach(item => {
+        const chip = document.createElement('div');
+        chip.className = 'puzzle-chip';
+        chip.id = 'chip_' + item.id;
+        chip.textContent = item.text;
+        chip.onclick = () => placeChipInNextSlot(item);
+        pool.appendChild(chip);
+      });
+      resetTimeline();
+    }
+
+    function placeChipInNextSlot(item) {
+      sfx.playClick();
+      for (let i = 1; i <= 4; i++) {
+        if (!timelinePlaced[i]) {
+          timelinePlaced[i] = item;
+          const slot = document.getElementById('slot' + i);
+          slot.innerHTML = `<span style="color: var(--neon-cyan); font-size: 0.9rem; font-weight: 600;">${item.text}</span>`;
+          const chipEl = document.getElementById('chip_' + item.id);
+          if (chipEl) chipEl.classList.add('placed');
+          break;
+        }
+      }
+
+      if (Object.keys(timelinePlaced).length === 4) {
+        const nextBtn = document.getElementById('stage5NextBtn');
+        nextBtn.disabled = false;
+        nextBtn.style.opacity = '1';
+      }
+    }
+
+    function resetTimeline() {
+      timelinePlaced = {};
+      for (let i = 1; i <= 4; i++) {
+        const slot = document.getElementById('slot' + i);
+        if (slot) slot.innerHTML = `<span style="color: var(--text-sub); font-size: 0.8rem;">(단서 조각을 터치하여 여기에 배치)</span>`;
+      }
+      document.querySelectorAll('.puzzle-chip').forEach(c => c.classList.remove('placed'));
+      const nextBtn = document.getElementById('stage5NextBtn');
+      if (nextBtn) {
+        nextBtn.disabled = true;
+        nextBtn.style.opacity = '0.5';
+      }
+    }
+
+    document.getElementById('resetTimelineBtn').addEventListener('click', () => {
+      sfx.playClick();
+      resetTimeline();
+    });
+
+    document.getElementById('stage5NextBtn').addEventListener('click', () => {
+      let correctOrderCount = 0;
+      for (let i = 1; i <= 4; i++) {
+        if (timelinePlaced[i] && timelinePlaced[i].step === i) {
+          correctOrderCount++;
+        }
+      }
+      let stageScore = Math.round((correctOrderCount / 4) * 100);
+      gameState.big6.synthesis = stageScore;
+      gameState.pisa.understanding = Math.round((gameState.pisa.understanding + stageScore) / 2);
+      addScore(stageScore);
+
+      if (stageScore >= 75) sfx.playSuccess();
+      switchScreen('screenStage6');
+    });
+
+    // Stage 6: Metacognition
+    document.querySelectorAll('#stage6Options .chip-item').forEach(opt => {
+      opt.addEventListener('click', () => {
+        sfx.playClick();
+        document.querySelectorAll('#stage6Options .chip-item').forEach(c => c.classList.remove('selected'));
+        opt.classList.add('selected');
+        const score = parseInt(opt.dataset.score);
+        gameState.big6.evaluation = score;
+        gameState.pisa.reflecting = Math.round((gameState.pisa.reflecting + score) / 2);
+      });
+    });
+
+    document.getElementById('finishMissionBtn').addEventListener('click', () => {
+      const selected = document.querySelector('#stage6Options .chip-item.selected');
+      if (!selected) {
+        alert("최종 성찰 문항에 답을 선택해 주세요!");
+        return;
+      }
+      addScore(gameState.big6.evaluation);
+      clearInterval(gameState.timerInterval);
+      finishMissionAndShowReport();
+    });
+
+    /* =========================================================
+       6. COMPREHENSIVE PISA & BIG 6 DIAGNOSTIC REPORT ENGINE
+       ========================================================= */
+    function finishMissionAndShowReport() {
+      sfx.playFanfare();
+      launchConfetti();
+
+      // Normalize overall score out of 100
+      const totalBig6 = Object.values(gameState.big6).reduce((a, b) => a + b, 0);
+      const overallScore = Math.round(totalBig6 / 6);
+      const playTimeUsed = gameState.timerTotalSeconds - gameState.timeRemaining;
+      const min = Math.floor(playTimeUsed / 60);
+      const sec = playTimeUsed % 60;
+      const timeStr = `${min}분 ${sec}초`;
+
+      // Student info display
+      const stuInfo = `${gameState.student.school} ${gameState.student.class} ${gameState.student.name}`;
+      document.getElementById('reportStudentInfo').textContent = stuInfo;
+      const now = new Date();
+      document.getElementById('reportTimestamp').textContent = now.toLocaleDateString('ko-KR') + ' ' + now.toLocaleTimeString('ko-KR');
+      document.getElementById('finalScoreVal').textContent = overallScore;
+      document.getElementById('finalTimeVal').textContent = timeStr;
+
+      // Calculate PISA Level based on OECD reading proficiency scale
+      let pisaLevel = 'Level 3';
+      let pisaTitle = '보통 수준의 디지털 문해력 (기준선)';
+      let pisaDesc = '중학생 연령대에서 요구되는 보편적인 문해력 수준을 만족합니다. 핵심 정보를 파악하고 기본적인 사실과 의견을 적절히 구분할 수 있습니다.';
+
+      if (overallScore >= 90) {
+        pisaLevel = 'Level 6';
+        pisaTitle = '최상위 비판적 디지털 문해력 (상위 1%)';
+        pisaDesc = '복합적이고 모순된 다중 텍스트에서 미묘한 편향성과 오류를 완벽히 짚어내며, 고차원적 논리 추론과 창의적 대안 제시가 가능한 최상위 수준입니다.';
+      } else if (overallScore >= 80) {
+        pisaLevel = 'Level 5';
+        pisaTitle = '탁월한 비판적·탐색적 문해력';
+        pisaDesc = '정보원의 신뢰도를 다각도로 검증하고 왜곡된 통계나 서술을 예리하게 식별하며, 수집된 사실들을 논리정연하게 통합하는 우수한 역량을 보유하고 있습니다.';
+      } else if (overallScore >= 70) {
+        pisaLevel = 'Level 4';
+        pisaTitle = '능숙한 문제해결형 문해력';
+        pisaDesc = '명확하지 않은 상황에서도 적절한 검색 전략을 세워 필요한 정보를 찾아내고, 인과관계에 맞게 팩트를 정돈할 수 있는 숙련된 수준입니다.';
+      } else if (overallScore >= 55) {
+        pisaLevel = 'Level 3';
+        pisaTitle = '보통 수준의 디지털 문해력';
+        pisaDesc = '주어진 텍스트의 중심 내용과 표면적인 사실 관계를 잘 이해합니다. 미묘한 통계 왜곡이나 복합 검색 연산자 활용을 조금 더 연습하면 레벨업할 수 있습니다.';
+      } else if (overallScore >= 40) {
+        pisaLevel = 'Level 2';
+        pisaTitle = '기본 문해력 (사회적 요구 최소기준)';
+        pisaDesc = '직접적으로 드러난 정보는 잘 찾아내지만, 낚시성 기사나 교묘한 가짜 정보를 만났을 때 출처를 꼼꼼히 대조하는 훈련이 권장됩니다.';
+      } else {
+        pisaLevel = 'Level 1';
+        pisaTitle = '기초 문해력 보완 필요';
+        pisaDesc = '긴 글을 읽고 핵심 키워드를 추출하거나 공신력 있는 출처를 가려내는 기초 정보 탐색 및 독해 훈련이 필요합니다.';
+      }
+
+      document.getElementById('pisaLevelDisplay').textContent = pisaLevel;
+      document.getElementById('pisaTitleDisplay').textContent = pisaTitle;
+      document.getElementById('pisaDescDisplay').textContent = pisaDesc;
+
+      // Render Big 6 Bars
+      const b6 = gameState.big6;
+      setBar('Big6_1', b6.taskDefinition);
+      setBar('Big6_2', b6.seekingStrategies);
+      setBar('Big6_3', b6.locationAccess);
+      setBar('Big6_4', b6.useInformation);
+      setBar('Big6_5', b6.synthesis);
+      setBar('Big6_6', b6.evaluation);
+
+      // Render PISA Cognitive Domains
+      const p1 = Math.min(100, Math.round(gameState.pisa.locating));
+      const p2 = Math.min(100, Math.round(gameState.pisa.understanding));
+      const p3 = Math.min(100, Math.round(gameState.pisa.reflecting));
+
+      document.getElementById('pisaProc1Score').textContent = p1 + '점';
+      document.getElementById('pisaProc2Score').textContent = p2 + '점';
+      document.getElementById('pisaProc3Score').textContent = p3 + '점';
+
+      // Save Data to LocalStorage & Firebase
+      const record = {
+        studentSchool: gameState.student.school,
+        studentClass: gameState.student.class,
+        studentName: gameState.student.name,
+        timestamp: new Date().toISOString(),
+        timeUsedSeconds: playTimeUsed,
+        overallScore: overallScore,
+        pisaLevel: pisaLevel,
+        pisaTitle: pisaTitle,
+        big6: b6,
+        pisaProcesses: { locating: p1, understanding: p2, reflecting: p3 }
+      };
+
+      saveResultOffline(record);
+      saveResultFirebase(record);
+
+      switchScreen('screenReport');
+    }
+
+    function setBar(idSuffix, score) {
+      const clamped = Math.max(5, Math.min(100, Math.round(score)));
+      document.getElementById('score' + idSuffix).textContent = clamped + '%';
+      document.getElementById('fill' + idSuffix).style.width = clamped + '%';
+    }
+
+    /* =========================================================
+       7. STORAGE & FIREBASE INTEGRATION
+       ========================================================= */
+    function saveResultOffline(record) {
+      try {
+        const history = JSON.parse(localStorage.getItem('il_game_history') || '[]');
+        history.push(record);
+        localStorage.setItem('il_game_history', JSON.stringify(history));
+      } catch (e) {
+        console.warn('LocalStorage error:', e);
+      }
+    }
+
+    function saveResultFirebase(record) {
+      const cfgStr = localStorage.getItem('il_firebase_config');
+      const colName = localStorage.getItem('il_firebase_col') || 'il_literacy_results';
+      const syncEl = document.getElementById('cloudSyncStatus');
+
+      if (!cfgStr) {
+        syncEl.textContent = '💾 로컬 저장소(LocalStorage)에 안전하게 저장되었습니다. (온라인 DB 미설정)';
+        return;
+      }
+
+      // Check if Firebase is loaded online
+      if (window.firebase && window.firebase.firestore) {
+        try {
+          if (!firebase.apps.length) {
+            firebase.initializeApp(JSON.parse(cfgStr));
+          }
+          const db = firebase.firestore();
+          db.collection(colName).add(record).then(() => {
+            syncEl.innerHTML = '🔥 <strong style="color:var(--neon-green)">파이어베이스(Firestore) 클라우드 동기화 완료!</strong> 및 로컬 저장 완료';
+          }).catch(err => {
+            syncEl.textContent = '⚠️ 파이어베이스 업로드 실패: ' + err.message + ' (로컬 보관됨)';
+          });
+        } catch (err) {
+          syncEl.textContent = '⚠️ 파이어베이스 초기화 오류: ' + err.message + ' (로컬 보관됨)';
+        }
+      } else {
+        syncEl.textContent = '💾 오프라인 모드: 결과가 브라우저에 안전하게 보관되었습니다.';
+      }
+    }
+
+    // Export CSV
+    document.getElementById('exportCsvBtn').addEventListener('click', () => {
+      sfx.playClick();
+      const history = JSON.parse(localStorage.getItem('il_game_history') || '[]');
+      if (history.length === 0) {
+        alert("저장된 측정 결과 기록이 없습니다.");
+        return;
+      }
+
+      let csv = "\uFEFF학교,학년반,이름,일시,소요시간(초),종합점수,PISA레벨,과제정의,탐색전략,위치접근,정보활용,정보종합,평가성찰\n";
+      history.forEach(r => {
+        csv += `"${r.studentSchool}","${r.studentClass}","${r.studentName}","${r.timestamp}",${r.timeUsedSeconds},${r.overallScore},"${r.pisaLevel}",${r.big6.taskDefinition},${r.big6.seekingStrategies},${r.big6.locationAccess},${r.big6.useInformation},${r.big6.synthesis},${r.big6.evaluation}\n`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `문해력_정보문해력_측정결과_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    });
+
+    // Start / Restart Buttons
+    document.getElementById('startMissionBtn').addEventListener('click', () => {
+      sfx.init();
+      sfx.playSuccess();
+      const school = document.getElementById('studentSchool').value.trim() || '소속 미기재';
+      const sClass = document.getElementById('studentClass').value.trim() || '학급 미기재';
+      const name = document.getElementById('studentName').value.trim() || '익명 요원';
+
+      gameState.student = { school, class: sClass, name };
+      startTimer();
+      switchScreen('screenStage1');
+    });
+
+    document.getElementById('restartGameBtn').addEventListener('click', () => {
+      sfx.playClick();
+      location.reload();
+    });
+
+    // Audio & Settings Modal
+    document.getElementById('soundToggle').addEventListener('click', () => {
+      sfx.enabled = !sfx.enabled;
+      document.getElementById('soundToggle').textContent = sfx.enabled ? '🔊' : '🔇';
+      if (sfx.enabled) sfx.playClick();
+    });
+
+    const modal = document.getElementById('dbSettingsModal');
+    document.getElementById('dbSettingsBtn').addEventListener('click', () => {
+      sfx.playClick();
+      document.getElementById('fbConfigJson').value = localStorage.getItem('il_firebase_config') || '';
+      document.getElementById('fbCollectionName').value = localStorage.getItem('il_firebase_col') || 'il_literacy_results';
+      modal.classList.add('active');
+    });
+
+    document.getElementById('closeDbModalBtn').addEventListener('click', () => {
+      modal.classList.remove('active');
+    });
+
+    document.getElementById('saveDbModalBtn').addEventListener('click', () => {
+      sfx.playSuccess();
+      const cfg = document.getElementById('fbConfigJson').value.trim();
+      const col = document.getElementById('fbCollectionName').value.trim();
+      if (cfg) {
+        try {
+          JSON.parse(cfg);
+          localStorage.setItem('il_firebase_config', cfg);
+        } catch (e) {
+          alert("JSON 형식이 올바르지 않습니다. 다시 확인해 주세요.");
+          return;
+        }
+      } else {
+        localStorage.removeItem('il_firebase_config');
+      }
+      localStorage.setItem('il_firebase_col', col || 'il_literacy_results');
+      alert("데이터베이스 설정이 성공적으로 저장되었습니다!");
+      modal.classList.remove('active');
+    });
+
+    /* =========================================================
+       8. CONFETTI CELEBRATION CANVAS
+       ========================================================= */
+    function launchConfetti() {
+      const canvas = document.getElementById('confettiCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#00f2fe', '#4facfe', '#9d4edd', '#00e676', '#ff2a6d', '#ffb703'];
+
+      for (let i = 0; i < 120; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height * 0.5,
+          r: Math.random() * 6 + 2,
+          c: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 4 + 2,
+          tilt: Math.random() * 10
+        });
+      }
+
+      let animId;
+      function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let alive = false;
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.tilt += 0.1;
+          if (p.y < canvas.height) alive = true;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = p.c;
+          ctx.fill();
+        });
+        if (alive) animId = requestAnimationFrame(render);
+      }
+      render();
+      setTimeout(() => { cancelAnimationFrame(animId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 6000);
+    }
+  </script>
+
+  <!-- Optional Firebase CDN (Loads gracefully when online) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+</body>
+</html>
